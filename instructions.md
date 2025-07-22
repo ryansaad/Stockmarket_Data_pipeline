@@ -85,3 +85,61 @@ Get code from the lambda_file in this repository
 Remember to stop the local script.
 
 
+## 3. Querying Historical Data with Amazon Athena
+### Step 3.1: Create AWS Glue Database
+- Go to the AWS Glue console.
+- In the left pane, click Databases -> Create database.
+- Database name: stock_data_db
+- Click Create.
+
+### Step 3.2: Create Glue Table
+- In the Glue console, click Tables -> Add table.
+- Table name: raw_stock_data
+- Database: Select stock_data_db.
+- Data source: Choose S3 and browse to the path where your raw data is stored (e.g., s3://<YOUR-BUCKET-NAME>/raw-data/).
+- Data format: Choose JSON.
+- Define Schema: Manually add the columns and their data types (e.g., symbol as string, price as double, volume as bigint, timestamp as string).
+
+- Click Next and Create table.
+
+### Step 3.3: Set Up Athena
+- Go to the Amazon Athena console.
+- If prompted, set up a query result location by clicking Edit Settings and choosing an S3 bucket (you can create a new one like athena-query-results-yourinitials-date).
+
+- In the query editor, ensure the Database is set to stock_data_db.
+
+- Run a test query:
+
+SQL
+** SELECT * FROM "raw_stock_data" LIMIT 10;
+
+## 4. Stock Trend Alerts using SNS
+### Step 4.1: Enable DynamoDB Streams
+- Go to your stock-market-data table in the DynamoDB console.
+- Click the Exports and streams tab.
+- Under DynamoDB stream details, click Turn on.
+- Select New image and click Turn on stream.
+
+### Step 4.2: Create SNS Topic
+- Go to the Amazon SNS console -> Topics -> Create topic.
+- Type: Standard.
+- Name: Stock_Trend_Alerts.
+- Click Create topic.
+- Inside the topic, click Create subscription.
+- Protocol: Select Email or SMS.
+- Endpoint: Enter your email address or phone number.
+- Click Create subscription and confirm it via the link sent to your email/phone.
+
+### Step 4.3: Create IAM Role for Alerting Lambda
+- Go to the IAM console -> Roles -> Create role.
+- Use case: Lambda.
+- Attach policies: AmazonDynamoDBFullAccess, AmazonSNSFullAccess, AWSLambdaBasicExecutionRole.
+- Name the role StockTrendLambdaRole and create it.
+### Step 4.4: Create and Configure the Alerting Lambda
+- Go to the Lambda console -> Create function.
+- Function Name: StockTrendAnalysis
+- Runtime: Python 3.12 (or newer)
+- Execution Role: Choose StockTrendLambdaRole
+- Click Add trigger, select DynamoDB, choose your stock-market-data table, set Batch size to 2, and click Add.
+- Paste the following code and Deploy.
+- get code from the SNS_Alert_File.py
