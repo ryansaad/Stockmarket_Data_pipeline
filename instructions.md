@@ -143,3 +143,19 @@ SQL
 - Click Add trigger, select DynamoDB, choose your stock-market-data table, set Batch size to 2, and click Add.
 - Paste the following code and Deploy.
 - get code from the SNS_Alert_File.py
+
+
+* Start your local streaming script again. When a new record for AAPL with a price over your threshold is inserted into DynamoDB, the Lambda will trigger and send an SNS alert.
+
+* Check your Email/phone for SNS Alert regarding stocks alert
+
+## 5. Project Clean-Up
+- To avoid ongoing charges, delete all resources in the following order:
+- Stop the local Python script.
+- Kinesis Data Stream: Delete the stock-market-stream.
+- Lambda Functions: Delete ProcessStockData and StockTrendAnalysis.
+- SNS Topic: Delete the Stock_Trend_Alerts topic.
+- DynamoDB Table: Delete the stock-market-data table.
+- S3 Buckets: Empty and then delete the raw data and Athena results buckets.
+- AWS Glue: Delete the raw_stock_data table and the stock_data_db database.
+- IAM Roles: Delete Lambda_Kinesis_Processing_Role and StockTrendLambdaRole.
