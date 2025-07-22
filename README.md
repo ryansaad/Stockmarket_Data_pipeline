@@ -2,15 +2,9 @@
 # Near Real-Time Stock Market Data Analytics Pipeline on AWS
 
 This repository contains the code and complete instructions for building a near real-time, event-driven stock market data analytics pipeline using serverless services on AWS.
-
-***
-
 ## ☁️ Project Overview
 
 This project demonstrates a modern data engineering workflow designed to ingest, process, store, and analyze stock market data with minimal operational overhead. The architecture uses Amazon Kinesis for data ingestion, AWS Lambda for processing, Amazon S3 for long-term storage, Amazon DynamoDB for quick access, Amazon Athena for historical queries, and Amazon SNS for real-time trend alerts.
-
-
-***
 
 ## ✨ Key Features
 
@@ -20,7 +14,6 @@ This project demonstrates a modern data engineering workflow designed to ingest,
 * **Ad-Hoc Querying**: Leverages Amazon Athena to run standard SQL queries directly on the raw data stored in S3.
 * **Automated Trend Alerts**: Analyzes data streams for trend changes (e.g., moving average crossovers) and sends real-time alerts via email or SMS using Amazon SNS.
 
-***
 
 ## 🛠️ Services & Technologies Used
 
@@ -32,8 +25,6 @@ This project demonstrates a modern data engineering workflow designed to ingest,
 * **Alerting**: Amazon SNS (Simple Notification Service)
 * **Security**: IAM Roles & Policies
 * **Data Source**: Python (`yfinance` library)
-
-***
 
 ## 🚀 Getting Started
 
