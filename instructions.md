@@ -26,74 +26,62 @@ Follow this guide to build the near real-time stock market data analytics pipeli
 
 ### Step 1.3: Create the Python Streaming Script
 Create a new file named `stream_stock_data.py` and paste the following code.
+get the code from the same file named in this repository
+### Step 1.4: Run the Script and Verify
+- Run the script from your terminal:
+- Bash
+- python stream_stock_data.py
+- Go to the Kinesis console, select your stream, and check the Monitoring tab to see incoming records.
 
-```python
-import boto3
-import json
-import time
-import yfinance as yf
+Important: Stop the script with CTRL+C in your terminal after a few minutes to avoid unnecessary costs.
 
-# AWS Kinesis Configuration
-# IMPORTANT: Replace us-east-1 with your desired region
-kinesis_client = boto3.client('kinesis', region_name='us-east-1') 
 
-# IMPORTANT: Replace with your actual stream name
-STREAM_NAME = "stock-market-stream"
-STOCK_SYMBOL = "AAPL"
-DELAY_TIME = 30  # Time delay in seconds
+## 2. Processing Data with AWS Lambda
+### Step 2.1: Create DynamoDB Table
+- Navigate to the DynamoDB console.
+- Click Create table.
+- Table name: stock-market-data
+- Partition key: symbol (Type: String)
+- Sort key: timestamp (Type: String)
+- Click Create table.
 
-# Function to fetch stock data
-def get_stock_data(symbol):
-    try:
-        stock = yf.Ticker(symbol)
-        data = stock.history(period="2d")
+### Step 2.2: Create S3 Bucket
+- Navigate to the S3 console.
+- Click Create bucket.
+- Bucket name: Enter a globally unique name (e.g., stock-market-raw-data-yourinitials-date).
+- Leave other settings as default and click Create bucket.
 
-        if len(data) < 2:
-            raise ValueError("Insufficient data to fetch previous close.")
+### Step 2.3: Create IAM Role for Lambda
+- Go to the IAM console -> Roles -> Create role.
+- Trusted entity type: AWS service.
+- Use case: Lambda.
+= Attach the following managed policies:
+1 .AmazonKinesisFullAccess
+2. AmazonDynamoDBFullAccess
+3. AmazonS3FullAccess
+4. AWSLambdaBasicExecutionRole.
 
-        stock_data = {
-            "symbol": symbol,
-            "open": round(data.iloc[-1]["Open"], 2),
-            "high": round(data.iloc[-1]["High"], 2),
-            "low": round(data.iloc[-1]["Low"], 2),
-            "price": round(data.iloc[-1]["Close"], 2),
-            "previous_close": round(data.iloc[-2]["Close"], 2),
-            "change": round(data.iloc[-1]["Close"] - data.iloc[-2]["Close"], 2),
-            "change_percent": round(((data.iloc[-1]["Close"] - data.iloc[-2]["Close"]) / data.iloc[-2]["Close"]) * 100, 2),
-            "volume": int(data.iloc[-1]["Volume"]),
-            "timestamp": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
-        }
-        return stock_data
-    except Exception as e:
-        print(f"Error fetching stock data for {symbol}: {e}")
-        return None
+-Name the role Lambda_Kinesis_Processing_Role and create it.
 
-# Function to stream data into Kinesis
-def send_to_kinesis():
-    while True:
-        try:
-            stock_data = get_stock_data(STOCK_SYMBOL)
-            if stock_data is None:
-                print("Skipping this iteration due to API error.")
-                time.sleep(DELAY_TIME)
-                continue
+### Step 2.4: Create and Configure the Processing Lambda
+- Go to the Lambda console -> Create function.
+- Function Name: ProcessStockData
+- Runtime: Python 3.12 (or newer)
+- Execution Role: Choose Use an existing role and select Lambda_Kinesis_Processing_Role.
+- Click Create function.
+- In the function overview, click Add trigger. Select Kinesis, choose your stock-market-stream, set the Batch size to 2, and
+- click Add.
 
-            print(f"Sending: {stock_data}")
+Paste the following code into the Lambda code editor and click Deploy.
+Get code from the lambda_file in this repository
 
-            # Send to Kinesis
-            response = kinesis_client.put_record(
-                StreamName=STREAM_NAME,
-                Data=json.dumps(stock_data),
-                PartitionKey=STOCK_SYMBOL
-            )
-            print(f"Kinesis Response: {response}")
 
-            time.sleep(DELAY_TIME)
 
-        except Exception as e:
-            print(f"An error occurred: {e}")
-            time.sleep(DELAY_TIME)
+### Step 2.5: Test the Integration
+- Run your local stream_stock_data.py script for about 5-10 minutes.
+- Check your S3 bucket to see folders of raw JSON files.
+- Go to your DynamoDB table and click Explore table items to see the processed records.
 
-# Run the streaming function
-if __name__ == "__main__":
-    send_to_kinesis()
+Remember to stop the local script.
+
+
